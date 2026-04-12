@@ -4,10 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { href: "/dashboard", label: "Home" },
+  { href: "/dashboard", label: "Dashboard" },
   { href: "/materi", label: "Materi" },
   { href: "/latihan", label: "Latihan" },
-  { href: "/ujian", label: "Ujian" },
+  { href: "/ujian", label: "Ujian Simulasi" },
 ];
 
 export function BottomNav() {
