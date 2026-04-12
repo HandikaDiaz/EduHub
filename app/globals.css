@@ -46,6 +46,11 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --color-brand-sky: #0EA5E9;
+  --color-brand-sky-light: #38BDF8;
+  --color-brand-sky-bg: #F0F9FF;
+  --color-brand-purple: #A855F7;
+  --color-brand-purple-dark: #7C3AED;
 }
 
 :root {
