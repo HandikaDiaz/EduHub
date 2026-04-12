@@ -22,8 +22,7 @@ export async function POST(req: Request): Promise<Response> {
 
   const body = await req.text();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const wh: InstanceType<typeof Webhook> = (Webhook as any)(webhookSecret);
+  const wh = new Webhook(webhookSecret);
   let evt: WebhookEvent;
 
   try {

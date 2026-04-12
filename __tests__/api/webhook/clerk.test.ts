@@ -1,10 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("svix", () => ({
-  Webhook: vi.fn().mockImplementation(() => ({
-    verify: vi.fn().mockImplementation((body: string) => JSON.parse(body)),
-  })),
-}));
+vi.mock("svix", () => {
+  class MockWebhook {
+    verify = vi.fn().mockImplementation((body: string) => JSON.parse(body));
+  }
+  return {
+    Webhook: MockWebhook,
+  };
+});
 
 vi.mock("convex/nextjs", () => ({
   fetchMutation: vi.fn().mockResolvedValue("mock-convex-id"),
@@ -59,8 +62,11 @@ describe("POST /api/webhook/clerk", () => {
 
   it("returns 400 when svix signature verification fails", async () => {
     const { Webhook } = await import("svix");
-    vi.mocked(Webhook).mockImplementationOnce(
-      () => ({ verify: vi.fn().mockImplementationOnce(() => { throw new Error("Invalid signature"); }) }) as unknown as InstanceType<typeof Webhook>,
+    const webpackModule = await import("svix");
+    vi.spyOn(webpackModule, "Webhook").mockImplementationOnce(
+      class {
+        verify = vi.fn().mockImplementationOnce(() => { throw new Error("Invalid signature"); });
+      } as any,
     );
     const res = await POST(makeRequest({ type: "user.created" }));
     expect(res.status).toBe(400);
