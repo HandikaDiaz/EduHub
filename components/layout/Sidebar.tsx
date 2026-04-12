@@ -2,16 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-const navItems = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/materi", label: "Materi" },
-  { href: "/latihan", label: "Latihan" },
-  { href: "/ujian", label: "Ujian Simulasi" },
-];
+import { NAV_ITEMS } from "./nav-items";
 
 export function Sidebar() {
   const pathname = usePathname();
+
+  const isActive = (href: string) =>
+    href === "/dashboard"
+      ? pathname === href
+      : pathname === href || pathname.startsWith(href + "/");
 
   return (
     <aside className="hidden md:flex w-64 flex-col border-r bg-white h-screen sticky top-0">
@@ -20,13 +19,13 @@ export function Sidebar() {
           EduHub
         </Link>
       </div>
-      <nav className="flex-1 p-4 space-y-1">
-        {navItems.map((item) => (
+      <nav aria-label="Sidebar navigation" className="flex-1 p-4 space-y-1">
+        {NAV_ITEMS.map((item) => (
           <Link
             key={item.href}
             href={item.href}
             className={`block rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-              pathname === item.href
+              isActive(item.href)
                 ? "bg-brand-sky-bg text-brand-sky"
                 : "text-gray-600 hover:bg-gray-100"
             }`}
