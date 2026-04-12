@@ -12,28 +12,31 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhook(.*)",
 ]);
 
-// Named `proxy` — required by Next.js 16 proxy.ts convention
-export default clerkMiddleware(async (auth, req) => {
-  const { userId } = await auth();
+const isAuthRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
 
+export default clerkMiddleware(async (auth, req) => {
   // Redirect signed-in users away from auth pages
-  if (
-    userId &&
-    (req.nextUrl.pathname.startsWith("/sign-in") ||
-      req.nextUrl.pathname.startsWith("/sign-up"))
-  ) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+  if (isAuthRoute(req)) {
+    const { userId } = await auth();
+    if (userId) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+    return NextResponse.next();
   }
 
-  // Public routes pass through without auth
+  // Public routes pass through without auth check
   if (isPublicRoute(req)) {
     return NextResponse.next();
   }
 
   // All other routes require authentication
+  const { userId } = await auth();
   if (!userId) {
     const signInUrl = new URL("/sign-in", req.url);
-    signInUrl.searchParams.set("redirect_url", req.nextUrl.pathname);
+    signInUrl.searchParams.set(
+      "redirect_url",
+      req.nextUrl.pathname + req.nextUrl.search
+    );
     return NextResponse.redirect(signInUrl);
   }
 
