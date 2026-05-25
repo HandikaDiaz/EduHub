@@ -8,10 +8,12 @@ const isPublicRoute = createRouteMatcher([
   "/",
   "/sign-in(.*)",
   "/sign-up(.*)",
-  "/pricing(.*)",
+  "/sso-callback(.*)",
   "/api/webhook(.*)",
 ]);
 
+// Auth route — redirect signed-in users away. SSO callback NOT included
+// supaya Clerk bisa selesaikan OAuth flow tanpa terjebak redirect loop.
 const isAuthRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
@@ -33,10 +35,20 @@ export default clerkMiddleware(async (auth, req) => {
   const { userId } = await auth();
   if (!userId) {
     const signInUrl = new URL("/sign-in", req.url);
-    signInUrl.searchParams.set(
-      "redirect_url",
-      req.nextUrl.pathname + req.nextUrl.search
-    );
+
+    // Open-redirect hardening: hanya forward path + search yang same-origin.
+    // Pakai pathname mentah dari req.nextUrl (tidak boleh terima full URL dari
+    // user). Tambah whitelist: harus diawali "/" dan TIDAK "//" (protocol-relative
+    // URL bisa redirect ke domain lain).
+    const path = req.nextUrl.pathname;
+    const search = req.nextUrl.search;
+    const isSafePath =
+      path.startsWith("/") &&
+      !path.startsWith("//") &&
+      !path.startsWith("/\\");
+    if (isSafePath) {
+      signInUrl.searchParams.set("redirect_url", path + search);
+    }
     return NextResponse.redirect(signInUrl);
   }
 

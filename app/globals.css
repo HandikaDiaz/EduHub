@@ -133,3 +133,270 @@
     @apply font-sans;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Dashboard Animations                                                */
+/* ------------------------------------------------------------------ */
+
+@keyframes dashboard-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes wave {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  15% {
+    transform: rotate(14deg);
+  }
+  30% {
+    transform: rotate(-8deg);
+  }
+  40% {
+    transform: rotate(14deg);
+  }
+  50% {
+    transform: rotate(-4deg);
+  }
+  60% {
+    transform: rotate(10deg);
+  }
+  70% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes shimmer-slide {
+  0% {
+    background-position: -200% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Smooth scroll — global
+   Berlaku untuk semua anchor-navigation (misal /materi#slug dari dashboard).
+   Dihormati oleh media query prefers-reduced-motion di bagian bawah file.
+   --------------------------------------------------------------------------- */
+html {
+  scroll-behavior: smooth;
+}
+
+.dashboard-section {
+  opacity: 0;
+  animation: dashboard-fade-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ---------------------------------------------------------------------------
+   Scroll-driven reveal — dashboard section muncul saat masuk viewport.
+   Menggunakan native CSS scroll-timeline (Chrome/Edge 115+).
+   Browser yang belum support jatuh ke animasi mount biasa di atas.
+   --------------------------------------------------------------------------- */
+@supports (animation-timeline: view()) {
+  .dashboard-section {
+    /* Reset mount animation; ganti dengan scroll-linked reveal */
+    animation: dashboard-scroll-reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 25%;
+  }
+}
+
+@keyframes dashboard-scroll-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Hormati preferensi user — matikan smooth scroll & animasi reveal */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .dashboard-section {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+.animate-wave {
+  animation: wave 1.8s ease-in-out 0.5s 1;
+}
+
+/* Gradient mesh ambient glow behind the header */
+.dashboard-mesh-bg {
+  background:
+    radial-gradient(ellipse 600px 350px at 8% 40%, oklch(0.72 0.14 230 / 0.10), transparent),
+    radial-gradient(ellipse 450px 300px at 85% 15%, oklch(0.65 0.18 295 / 0.07), transparent),
+    radial-gradient(ellipse 350px 250px at 50% 90%, oklch(0.74 0.12 172 / 0.05), transparent),
+    var(--background);
+}
+
+/* Upgrade banner shimmer */
+.upgrade-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer-slide 6s ease-in-out infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/* Quiz Animations                                                      */
+/* ------------------------------------------------------------------ */
+
+@keyframes quiz-slide {
+  from {
+    opacity: 0;
+    transform: translateX(var(--quiz-slide-from, 24px));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes quiz-fade {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes quiz-score-ring {
+  from {
+    stroke-dashoffset: 439.82;
+  }
+}
+
+@keyframes timer-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.quiz-slide-in {
+  animation: quiz-slide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.quiz-fade-in {
+  animation: quiz-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.quiz-score-fill {
+  animation: quiz-score-ring 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+
+.quiz-timer-pulse {
+  animation: timer-pulse 1s ease-in-out infinite;
+}
+
+/* Hide scrollbar on nav pills */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Custom dark scrollbar — admin shell                                  */
+/* ------------------------------------------------------------------ */
+/*
+ * Scrollbar tipis bertema gelap untuk admin pages (/admin/quiz, /admin/latihan,
+ * dll). Match palette gray-950 main + sidebar gelap.
+ *
+ * Selector ini cascade ke SEMUA descendant — pasang sekali di root container
+ * (AdminShell + DialogContent admin) lalu semua nested scroll (vertical &
+ * horizontal) ikut bertema gelap. Firefox via scrollbar-* properties; WebKit
+ * via ::-webkit-scrollbar pseudo-elements.
+ */
+.admin-dark-scroll,
+.admin-dark-scroll * {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.32 0.005 250) transparent; /* thumb track */
+}
+
+.admin-dark-scroll::-webkit-scrollbar,
+.admin-dark-scroll *::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.admin-dark-scroll::-webkit-scrollbar-track,
+.admin-dark-scroll *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-dark-scroll::-webkit-scrollbar-thumb,
+.admin-dark-scroll *::-webkit-scrollbar-thumb {
+  background-color: oklch(0.32 0.005 250); /* slate-700 ≈ */
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 200ms ease;
+}
+
+.admin-dark-scroll::-webkit-scrollbar-thumb:hover,
+.admin-dark-scroll *::-webkit-scrollbar-thumb:hover {
+  background-color: oklch(0.45 0.01 250); /* slate-500 ≈ */
+}
+
+.admin-dark-scroll::-webkit-scrollbar-corner,
+.admin-dark-scroll *::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ------------------------------------------------------------------ */
+/* Results Page Animations                                              */
+/* ------------------------------------------------------------------ */
+
+@keyframes result-hero-fade {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes result-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.result-hero-fade {
+  animation: result-hero-fade 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+.result-question-card {
+  animation: result-card-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
