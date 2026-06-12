@@ -54,6 +54,7 @@ export function SignUpForm() {
       const createRes = await signUp.create({
         emailAddress: email,
         password,
+        username: name,
         firstName,
         lastName,
       });
