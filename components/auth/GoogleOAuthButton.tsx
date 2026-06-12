@@ -61,7 +61,7 @@ export function GoogleOAuthButton({ mode, label }: GoogleOAuthButtonProps) {
         type="button"
         onClick={handleClick}
         disabled={loading}
-        className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+        className="cursor-pointer w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
       >
         {loading ? (
           <Loader2 className="size-4 animate-spin text-slate-500" />

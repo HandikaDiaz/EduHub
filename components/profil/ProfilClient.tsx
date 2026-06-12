@@ -205,7 +205,7 @@ export function ProfilClient() {
               Profil Saya
             </h1>
             <p className="text-sm text-muted-foreground">
-              Kelola akun dan lihat ringkasan belajarmu.
+              Lihat akun dan ringkasan belajarmu.
             </p>
           </div>
         </div>
