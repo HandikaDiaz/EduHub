@@ -6,18 +6,10 @@ import { Loader2 } from "lucide-react";
 import { captureClientError } from "@/lib/sentry";
 
 interface GoogleOAuthButtonProps {
-  /** "sign-in" pakai useSignIn, "sign-up" pakai useSignUp. */
   mode: "sign-in" | "sign-up";
-  /** Custom label. Default mengikuti mode. */
   label?: string;
 }
 
-/**
- * Tombol OAuth Google — pakai Clerk Signal API (`signIn.sso` / `signUp.sso`).
- * Setelah Google redirect kembali, user mendarat di /sso-callback yang akan
- * `<AuthenticateWithRedirectCallback />` resolve session lalu lempar ke
- * /dashboard.
- */
 export function GoogleOAuthButton({ mode, label }: GoogleOAuthButtonProps) {
   const { signIn } = useSignIn();
   const { signUp } = useSignUp();

@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useSignIn } from "@clerk/nextjs";
+import { useSignIn, useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
 import { GoogleOAuthButton } from "./GoogleOAuthButton";
 
 export function SignInForm() {
-  const { signIn, setActive } = useSignIn();
+  const { signIn, errors, fetchStatus } = useSignIn();
+  const { isLoaded } = useAuth();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -17,34 +18,59 @@ export function SignInForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // ✅ Loading state global Clerk
+  if (!isLoaded) return null;
+
+  // ✅ Loading state dari fetchStatus
+  const isFetching = fetchStatus === "fetching";
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      // Single-step password sign-in via Clerk Signal API.
-      const createRes = await signIn.create({
-        identifier: email,
+      // ✅ Core 3: signIn.password() menggantikan signIn.create({ identifier, password })
+      const { error: passwordError } = await signIn.password({
+        emailAddress: email,
         password,
       });
-      if (createRes.error) {
-        setError(formatClerkError(createRes.error));
+
+      if (passwordError) {
+        setError(formatClerkError(passwordError));
         return;
       }
 
-      // Setelah create dengan password, status mestinya `complete`.
-      // Finalize untuk activate session lalu redirect.
-      if (createRes.status === "complete" && createRes.createdSessionId) {
-        await setActive({ session: createRes.createdSessionId });
-        router.push("/dashboard");
+      // ✅ Core 3: signIn.status ada di object signIn, bukan di return value
+      if (signIn.status === "complete") {
+        // ✅ Core 3: finalize() menggantikan setActive()
+        const { error: finalizeError } = await signIn.finalize({
+          navigate: async ({ session, decorateUrl }) => {
+            // Handle session tasks jika ada
+            if (session?.currentTask) {
+              console.log(session.currentTask);
+              return;
+            }
+            // Navigasi ke dashboard
+            const url = decorateUrl("/dashboard");
+            if (url.startsWith("http")) {
+              window.location.href = url;
+            } else {
+              router.push(url);
+            }
+          },
+        });
+        if (finalizeError) throw finalizeError;
+      } else if (signIn.status === "needs_second_factor") {
+        // Handle MFA — bisa redirect ke halaman MFA
+        setError("Login butuh verifikasi 2 faktor. Silakan verifikasi.");
+      } else if (signIn.status === "needs_client_trust") {
+        // Handle Client Trust verification
+        setError("Verifikasi perangkat diperlukan. Silakan cek email Anda.");
       } else {
-        // Jarang terjadi (mis. user butuh 2FA) — beri hint manual.
-        setError(
-          "Login butuh verifikasi tambahan. Silakan ulangi atau hubungi admin.",
-        );
+        setError("Login gagal. Silakan coba lagi.");
       }
-    } catch (err) {
+    } catch (err: any) {
       const msg = err instanceof Error ? err.message : "Login gagal";
       setError(msg);
     } finally {
@@ -78,6 +104,10 @@ export function SignInForm() {
           autoComplete="email"
           required
         />
+        {/* ✅ Core 3: Field-level errors dari errors.fields.identifier */}
+        {errors?.fields?.identifier && (
+          <p className="text-xs text-rose-500">{errors.fields.identifier.message}</p>
+        )}
 
         <FormField
           label="Password"
@@ -95,14 +125,14 @@ export function SignInForm() {
               className="text-slate-400 hover:text-slate-600 transition-colors"
               aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
             >
-              {showPassword ? (
-                <EyeOff className="size-4" />
-              ) : (
-                <Eye className="size-4" />
-              )}
+              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
             </button>
           }
         />
+        {/* ✅ Core 3: Field-level errors dari errors.fields.password */}
+        {errors?.fields?.password && (
+          <p className="text-xs text-rose-500">{errors.fields.password.message}</p>
+        )}
 
         <div className="flex justify-end">
           <Link
@@ -119,10 +149,10 @@ export function SignInForm() {
         <div className="space-y-2">
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || isFetching}
             className="group w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-gradient-to-r from-sky-500 via-sky-600 to-purple-600 text-white text-sm font-bold shadow-lg shadow-sky-300/40 hover:shadow-xl hover:shadow-purple-300/40 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:transform-none cursor-pointer"
           >
-            {loading ? (
+            {loading || isFetching ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
                 Memproses...
@@ -171,9 +201,7 @@ function FormField({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-xs font-semibold text-slate-700">
-        {label}
-      </label>
+      <label className="block text-xs font-semibold text-slate-700">{label}</label>
       <div className="relative">
         <Icon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
         <input
@@ -186,9 +214,7 @@ function FormField({
           className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all"
         />
         {rightAccessory && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            {rightAccessory}
-          </div>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">{rightAccessory}</div>
         )}
       </div>
     </div>
