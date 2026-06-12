@@ -24,6 +24,7 @@ import {
   LogOut,
   Menu,
   ArrowLeft,
+  Loader2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -89,8 +90,12 @@ export function AdminShell({
   const pathname = usePathname();
   const { signOut } = useClerk();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleSignOut = () => signOut({ redirectUrl: "/sign-in" });
+  const handleSignOut = async () => {
+    setIsLoggingOut(true);
+    await signOut({ redirectUrl: "/" });
+  };
 
   const sidebarFooter = (
     <div className="border-t border-slate-700/50 p-4">
@@ -122,9 +127,14 @@ export function AdminShell({
         variant="ghost"
         className="w-full justify-start gap-2 text-slate-400 hover:bg-white/5 hover:text-red-400"
         onClick={handleSignOut}
+        disabled={isLoggingOut}
       >
-        <LogOut className="size-4" />
-        Keluar
+        {isLoggingOut ? (
+          <Loader2 className="size-4 animate-spin" />
+        ) : (
+          <LogOut className="size-4" />
+        )}
+        {isLoggingOut ? "Keluar..." : "Keluar"}
       </Button>
     </div>
   );
@@ -219,6 +229,14 @@ export function AdminShell({
           {children}
         </main>
       </div>
+
+      {/* Logout Overlay (Admin Dark Mode) */}
+      {isLoggingOut && (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950/70 backdrop-blur-sm">
+          <Loader2 className="size-8 animate-spin text-red-500 mb-3" />
+          <p className="text-sm font-semibold text-slate-200 animate-pulse">Sedang keluar...</p>
+        </div>
+      )}
     </div>
   );
 }

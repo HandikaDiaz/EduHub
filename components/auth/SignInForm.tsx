@@ -8,7 +8,7 @@ import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
 import { GoogleOAuthButton } from "./GoogleOAuthButton";
 
 export function SignInForm() {
-  const { signIn } = useSignIn();
+  const { signIn, setActive } = useSignIn();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -35,12 +35,8 @@ export function SignInForm() {
 
       // Setelah create dengan password, status mestinya `complete`.
       // Finalize untuk activate session lalu redirect.
-      if (signIn.status === "complete") {
-        const finRes = await signIn.finalize();
-        if (finRes.error) {
-          setError(formatClerkError(finRes.error));
-          return;
-        }
+      if (createRes.status === "complete" && createRes.createdSessionId) {
+        await setActive({ session: createRes.createdSessionId });
         router.push("/dashboard");
       } else {
         // Jarang terjadi (mis. user butuh 2FA) — beri hint manual.
@@ -117,32 +113,34 @@ export function SignInForm() {
           </Link>
         </div>
 
-        {error && (
-          <div className="rounded-xl bg-rose-50 border border-rose-200 px-3 py-2.5 text-xs text-rose-700">
-            {error}
-          </div>
-        )}
-
         {/* Clerk CAPTCHA mount point — wajib untuk sign-in di v7 */}
         <div id="clerk-captcha" />
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="group w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-gradient-to-r from-sky-500 via-sky-600 to-purple-600 text-white text-sm font-bold shadow-lg shadow-sky-300/40 hover:shadow-xl hover:shadow-purple-300/40 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:transform-none"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="size-4 animate-spin" />
-              Memproses...
-            </>
-          ) : (
-            <>
-              Masuk
-              <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
-            </>
+        <div className="space-y-2">
+          <button
+            type="submit"
+            disabled={loading}
+            className="group w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-gradient-to-r from-sky-500 via-sky-600 to-purple-600 text-white text-sm font-bold shadow-lg shadow-sky-300/40 hover:shadow-xl hover:shadow-purple-300/40 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:transform-none"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Memproses...
+              </>
+            ) : (
+              <>
+                Masuk
+                <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
+              </>
+            )}
+          </button>
+
+          {error && (
+            <p className="text-xs font-medium text-rose-500 text-center animate-in fade-in slide-in-from-top-1">
+              {error}
+            </p>
           )}
-        </button>
+        </div>
       </form>
     </div>
   );
@@ -198,6 +196,13 @@ function FormField({
 }
 
 /** Format ClerkError ke pesan readable. */
-function formatClerkError(err: { message?: string; longMessage?: string }): string {
+function formatClerkError(err: any): string {
+  if (err.errors && err.errors.length > 0) {
+    const firstErr = err.errors[0];
+    if (firstErr.code === "form_identifier_not_found") {
+      return "Akun belum terdaftar, silakan registrasi terlebih dahulu.";
+    }
+    return firstErr.longMessage ?? firstErr.message ?? "Terjadi kesalahan.";
+  }
   return err.longMessage ?? err.message ?? "Terjadi kesalahan.";
 }

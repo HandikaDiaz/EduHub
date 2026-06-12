@@ -166,6 +166,12 @@ export function ProfilClient() {
   const { signOut } = useClerk();
   const data = useQuery(api.users.getMyProfile);
   const { openUpgradeDialog } = useUpgradeDialog();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleSignOut = async () => {
+    setIsLoggingOut(true);
+    await signOut({ redirectUrl: "/" });
+  };
 
   if (data === undefined) return <ProfilSkeleton />;
   if (!data) return null;
@@ -282,10 +288,15 @@ export function ProfilClient() {
                 size="sm"
                 variant="outline"
                 className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
-                onClick={() => signOut()}
+                onClick={handleSignOut}
+                disabled={isLoggingOut}
               >
-                <LogOut className="size-3.5 mr-1" />
-                Keluar
+                {isLoggingOut ? (
+                  <Loader2 className="size-3.5 mr-1 animate-spin" />
+                ) : (
+                  <LogOut className="size-3.5 mr-1" />
+                )}
+                {isLoggingOut ? "Keluar..." : "Keluar"}
               </Button>
             </div>
           </div>
@@ -385,6 +396,14 @@ export function ProfilClient() {
           />
         </div>
       </section>
+
+      {/* Logout Overlay */}
+      {isLoggingOut && (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/60 backdrop-blur-sm">
+          <Loader2 className="size-8 animate-spin text-red-500 mb-3" />
+          <p className="text-sm font-semibold text-slate-700 animate-pulse">Sedang keluar...</p>
+        </div>
+      )}
     </div>
   );
 }
