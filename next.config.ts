@@ -15,31 +15,23 @@ import { withSentryConfig } from "@sentry/nextjs";
 //     yang kita pakai untuk SEO (StructuredData component).
 const cspDirectives = [
   "default-src 'self'",
-  // JS — Clerk, Convex, Sentry, Midtrans Snap, Vercel Analytics
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://app.midtrans.com https://app.sandbox.midtrans.com https://*.vercel-analytics.com https://va.vercel-scripts.com",
-  // Styles — Tailwind + Google Fonts (Inter)
+  // Tambahkan https://clerk.eduspeed.id dan https://*.clerk.services
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.com https://*.clerk.accounts.dev https://clerk.eduspeed.id https://*.clerk.services https://challenges.cloudflare.com https://app.midtrans.com https://app.sandbox.midtrans.com https://*.vercel-analytics.com https://va.vercel-scripts.com",
+  
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  // Fonts
   "font-src 'self' https://fonts.gstatic.com data:",
-  // Images — Cloudinary CDN, Clerk avatar, GDrive thumbnail (legacy), data:URL
   "img-src 'self' data: blob: https://res.cloudinary.com https://lh3.googleusercontent.com https://img.clerk.com https://images.clerk.dev",
-  // Fetch/WebSocket — Convex (real-time), Clerk API, Sentry, Midtrans
-  "connect-src 'self' https://*.convex.cloud wss://*.convex.cloud https://*.clerk.com https://*.clerk.accounts.dev https://*.ingest.us.sentry.io https://*.ingest.sentry.io https://api.midtrans.com https://api.sandbox.midtrans.com",
-  // Frames — Clerk (CAPTCHA/OAuth), Midtrans Snap iframe, YouTube embed materi video
+  
+  // Tambahkan https://clerk.eduspeed.id dan https://*.clerk.services di connect-src
+  "connect-src 'self' https://*.convex.cloud wss://*.convex.cloud https://*.clerk.com https://*.clerk.accounts.dev https://clerk.eduspeed.id https://*.clerk.services https://*.ingest.us.sentry.io https://*.ingest.sentry.io https://api.midtrans.com https://api.sandbox.midtrans.com",
+  
   "frame-src 'self' https://*.clerk.com https://challenges.cloudflare.com https://app.midtrans.com https://app.sandbox.midtrans.com https://www.youtube.com https://www.youtube-nocookie.com",
-  // Media (video Cloudinary kalau-kalau dipakai)
   "media-src 'self' https://res.cloudinary.com",
-  // Worker (Sentry, Convex potensial)
   "worker-src 'self' blob:",
-  // Disallow Flash & legacy plugins
   "object-src 'none'",
-  // <base href> tidak boleh diubah (anti-injection)
   "base-uri 'self'",
-  // Form submission hanya ke domain sendiri
   "form-action 'self'",
-  // Block jadi iframe di domain lain (clickjacking protection)
   "frame-ancestors 'none'",
-  // Auto-upgrade http→https untuk asset yang masih hardcoded http
   "upgrade-insecure-requests",
 ].join("; ");
 
